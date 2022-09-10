@@ -17,7 +17,9 @@ realm.df <- data.frame(id=idList, centroids.realms) #Using centroid positions te
 realm.labels <- cbind.data.frame(id=c("PA","NA","IM","AT","NT","AA"),long=c(4214966, -10839085, 8242787, 104967, -8522277, 15047461),lat=c(5386746.3, 5491240.4, 100038.6, -1347711.5, -1478926.6, -2980095.8))
 
 # IMPORT DATA
-wildMSData <- read_rds("output_tables/WildDataRevised.Rds") %>% select(Country, realms, long, lat, intactness, pa_dum, wildBin, velocity_temp_rcp85_2050, velocity_prec_rcp85_2050, ssp5_lui)
+wildMSData <- read_rds("output_tables/WildDataRevised.Rds") %>% 
+  select(Country, realms, long, lat, intactness, pa_dum, wildBin, 
+         velocity_temp_rcp85_2050, velocity_prec_rcp85_2050, ssp5_lui, base_lui)
 
 #IMPORT SOME FUNCTIONS
 source("./wild_codes/6_ImpFunctions.R")
@@ -46,7 +48,7 @@ lgd <- BivLegend$data; names(lgd) <- c("binY", "binX", "HEXCode", "UID")
 #add small (+.001) to instability to values
 #exp(0.827) #2.286449
 #exp(0.852) #2.344331
-Vul_Wilderness <- subset(wildMSData) %>%
+Vul_Wilderness <- wildMSData %>%
   mutate(ImpactProb = ssp5_lui+0.001 * (2.286449*velocity_temp_rcp85_2050 + 2.344331*velocity_prec_rcp85_2050),
          ImpactProb2 = ImpactProb/(1+ImpactProb))%>%
   mutate(binY = ntile(intactness, 3),
@@ -236,8 +238,9 @@ ggsave(plot=p1, filename="./out_plots/Fig4C_n.tiff", dpi = 300, height = 11, wid
 ##########################################################################################################################
 #                          LAND-USE POLAR FOR COUNTRIES (FIGURE S1)
 ##########################################################################################################################
-realmsRemained <- readr::read_csv("./data/wild_ms_database/input_tables/realmsRemained.csv")
+realmsRemained <- readr::read_csv("./data/wild_ms_database/input_tables/realmsRenamed.csv")
 (gMean1<- gm_mean(subset(wildMSData, wildBin=="wild")$base_lui+0.1, na.rm = TRUE))
+
 ins_coverage <- subset(wildMSData, wildBin=="wild") %>%
   inner_join(realmsRemained, by="Country")%>%
   mutate(Biorealms = ifelse(Biorealms == "NA1", "NA", Biorealms),
@@ -340,7 +343,7 @@ coverage_data$scenario <- factor(coverage_data$scenario, levels = c("Persistent 
     geom_text(data=label_data, aes(x=id, y=y_max+10, label=Country, hjust=hjust), color="black",  size=4, angle=label_data$angle, inherit.aes = FALSE)+
     geom_text(data=realms_breaks, aes(x=title, y=-15, label=realms), colour="black", alpha=0.8, size=4, fontface="bold", inherit.aes=FALSE)
 )
-#ggsave("SI_Fig1Nxx.tiff", dpi=600, height = 11, width = 10)
+#ggsave("SI_Fig1N.tiff", dpi=600, height = 11, width = 10)
 
 # Prepare data for plotting inset
 wildloss <- reshape2::dcast(ins_coverage, d1_d2 ~ value, length, value.var = "value"); names(wildloss)<-c("category", "change")

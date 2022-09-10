@@ -3,6 +3,8 @@
 # library(rgdal)
 # library(sf)
 library(tidyverse)
+#IMPORT SOME FUNCTIONS
+source("./wild_codes/6_ImpFunctions.R")
 # 
 # terrWilderness <- readOGR("./data/wild_ms_database/shp_vectors/Wilderness_maps_R.1", layer = "LoW_2009_current")%>%spTransform(CRS("+proj=longlat")) # Wilderness polygons are available online at 
 # clim_stack <- stack(list.files("D:/R - HoMe/3_PNAS-WILDERNESS/WLD_35YR-ENV2021/data/wild_ms_database/climate", pattern = ".tif$", full.names = TRUE)) # Raster layers of velocity of climate change are archeived in Figshare under the Identifier https://doi.org/10.6084/m9.figshare.16892629
@@ -99,8 +101,11 @@ df.YOS1$scenario <- factor(df.YOS1$scenario, levels=c("SSP1-RCP2.6","SSP5-RCP8.5
           axis.ticks = element_blank()
         ))
 
-(p1+annotation_custom(ggplotGrob(p2), xmin = 2065, ymin = .01, xmax = 2099, ymax = .40))
-ggsave("./out_plots/5_Fig5.tiff", dpi=600, width = 7.15, height = 7.15)
+(plt_fig4<- p1+annotation_custom(ggplotGrob(p2), xmin = 2065, ymin = .01, xmax = 2099, ymax = .40))
+#save as pdf
+cairo_pdf(filename = here::here("./out_plots/4_Fig4.pdf"), width = 8, height = 8, fallback_resolution = 600)
+print(plt_fig4)
+dev.off()
 
 # manipulating into cdf
 names(resTimeData)
@@ -155,7 +160,7 @@ spp_disp_vel <- spp_disp_vel%>%select(everything()) %>% summarise(dispersal = un
 # How much of these unique dispersal velocities are lower than our average gVoCC estimates
 nrow(subset(spp_disp_vel, dispersal<4.44))/nrow(spp_disp_vel)
 # = 74.7331% of unique dispersal velocities among 493 nonvolant mammals are be
-ggplot(spp_disp_vel,aes(x=dispersal, y=ecdf)) + 
+(plt_fig5 <- ggplot(spp_disp_vel,aes(x=dispersal, y=ecdf)) + 
   geom_line(aes(x=dispersal), size = 1)+
   theme_sleek(base_size = 18)+
   theme(legend.position = "top", 
@@ -166,9 +171,12 @@ ggplot(spp_disp_vel,aes(x=dispersal, y=ecdf)) +
   scale_y_continuous(expand = c(0,0), limits = c(0, 1.05), labels=scales::percent)+
   labs(x=expression("Dispersal velocity" ~ paste("(","km", yr^-1,")")),
        y="Cummulative percent")+
-  paletteer::scale_colour_paletteer_d(palette = "rcartocolor::Pastel")
-ggsave("out_plots/SI_FigS2.tiff", dpi = 600, width = 6.19, height = 7.15)
+  paletteer::scale_colour_paletteer_d(palette = "rcartocolor::Pastel"))
 
+#save as pdf
+cairo_pdf(filename = here::here("./out_plots/5_Fig5.pdf"), width = 6.19, height = 7.15, fallback_resolution = 600)
+print(plt_fig5)
+dev.off()
 
 
 

@@ -1,3 +1,11 @@
+
+#Land use and climate risk assessment for Earth’s remaining wilderness
+#DOI: 
+#Journal: Current Biology
+#September 2022
+#By: Ernest Frimpong Asamoah
+
+
 rm(list = ls())
 library(raster);library(tidyverse);library(rgdal)
 
@@ -359,7 +367,7 @@ col.matVul <- colmat(nbreaks = nBreaks, breakstyle = "quantile",
 lgd <- BivLegend$data; names(lgd) <- c("binY", "binX", "HEXCode", "UID")
 
 (globalAv = gm_mean(0.1+subset(wildMSData)$base_lui)) #Save the global average
-choro <- subset(wildMSData) %>%
+choro <- wildMSData %>%
   select(long, lat, base_vcc, base_lui, wildBin, base_lui_1, diff_base)%>%
   mutate(binY = ntile(base_vcc, 50),
          #binX = ntile(diff_base, 50),
@@ -396,6 +404,8 @@ choro <- subset(wildMSData) %>%
 (Fig1C <- expMapsBase+annotation_custom(ggplotGrob(legCI), ymin=-1.5e6, ymax = -4e6, xmin = -17e6, xmax = -8.5e6))
 (Fig1 <- cowplot::plot_grid(cowplot::plot_grid(Fig1A, Fig1B1, labels = c("A", "B")), Fig1C, labels = c("", "C"), nrow = 2))
 #ggsave(plot = Fig1, here::here("./out_plots/1_Fig1_base.tiff"), dpi=600, width = 5.5, height = 6)
+ggsave(plot = Fig1, here::here("./out_plots/1_Fig1.pdf"), device = cairo_pdf, width = 210, height = 220,
+       units = "mm", fallback_resolution = 600)
 
 #library(metR)
 #library(magrittr)
@@ -520,7 +530,7 @@ climCircular <- subset(wildMSData, wildBin=="wild") %>%
             vHigh = gm_mean(ssp5_vcc, na.rm=TRUE)) %>% 
   na.omit() %>% filter(N >5) %>%  # filter out Greenland and limit the >5 CORDEX pixels
   ungroup() %>%
-  mutate(Biorealms = factor(Biorealms), # Create new variables percentages of countries baseline
+  mutate(#Biorealms = factor(Biorealms), # Create new variables percentages of countries baseline
          vBAU = 100*(vHigh-vBase)/vBase, 
          vSUS = 100*(vSus-vBase)/vBase, 
          
@@ -579,7 +589,8 @@ max_value <- max(climPolar_data$tot, na.rm = T); y_max <- 20 * ceiling(max_value
 realms_breaks <- realms_breaks %>% mutate(v = list(v)) %>% unnest()
 
 climPolar_data$scenario <- factor(climPolar_data$scenario, levels = c("SSP1-RCP2.6","SSP5-RCP8.5"))
-climPolar_data %>% ggplot()+
+(plt_fig2 <- climPolar_data %>% 
+  ggplot()+
   geom_bar(aes(x = as.factor(id), y = velocity, fill = scenario), 
            position="stack", stat="identity", width = 0.5) +
   geom_segment(data = realms_breaks, aes(x = end, y = v, xend = start, yend = v), colour = "grey", size=0.3 , inherit.aes = FALSE ) +
@@ -603,5 +614,7 @@ climPolar_data %>% ggplot()+
   )+
   geom_text(data = label_data, aes(x = id, y = y_max, label = Country, hjust = hjust), color="black",  size = 3.5, angle = label_data$angle, inherit.aes = FALSE)+
   geom_text(data = realms_breaks, aes(x = title, y = 200, label = realms),  colour = "black", alpha = 0.8, size = 5, fontface = "bold", inherit.aes = FALSE)
-ggsave("3_Fig3x.tiff", dpi = 300, height = 11, width = 10)
-
+  )
+cairo_pdf(filename = here::here("./out_plots/2_Fig2.pdf"), width = 8.2, height = 8, fallback_resolution = 600)
+print(plt_fig2)
+dev.off()
